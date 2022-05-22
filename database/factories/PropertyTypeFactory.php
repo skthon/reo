@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\PropertyType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PropertyTypeFactory extends Factory
@@ -14,7 +15,7 @@ class PropertyTypeFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->randomElement(PropertyType::PROPERTY_TYPES),
         ];
     }
 }
