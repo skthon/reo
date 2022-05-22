@@ -29,7 +29,15 @@ class SearchProfileRepository extends EloquentModelRepository
      */
     public static function getMatchingProfiles(Property $property, $deviation)
     {
-        // Get subQuery and the list of fields present in the subquery
+        // Steps
+        // 1. Build subQuery based by applying filters based on property fields by considering deviation
+        //    This subQuery results contains the score of each field based on matching type(i.e loose or complete match)
+        //    For ex: SubQuery contains price_score, area_score return_actual_score, rooms_score, year_of_construction_score
+        // 2. Once we have the subQuery, then we need to calculate total score by summing all the scores
+        //    LooseSearchCount, StrictSearchCount can be calculated by using scores.
+        //    If the field score contains 0.5 then in that case it is a looseSearch and if its 1 then its a StrictSearch
+        // 3. We now have score, looseSearchCount, strictSearchCount then sort the result by score in descending order
+
         list($fieldsConsidered, $subQuery) = self::getSubQuery($property, $deviation);
 
         $looseCountExpression = collect([]);
@@ -50,6 +58,7 @@ class SearchProfileRepository extends EloquentModelRepository
                 DB::raw(implode(" + ", $looseCountExpression->toArray()) . " AS looseMatchesCount")
             ])
             ->mergeBindings($subQuery->getQuery())
+            ->orderByDesc('score')
             ->get();
     }
 
@@ -75,7 +84,11 @@ class SearchProfileRepository extends EloquentModelRepository
         // Logic for adding range conditions
         $subQuery->where(function ($subQuery) use ($property, &$selects, $minMultiplier, $maxMultiplier, &$fieldsConsidered) {
             foreach (Property::getRangeFields() as $field) {
-                if ($property->$field) {
+                // Skip deviation for year_of_construction as it doesn't return valid results
+                if ($field == 'year_of_construction' && $property->year_of_construction) {
+                    self::profileConditionBuilder($subQuery, $property, $field, $selects, 1, 1);
+                    $fieldsConsidered->add($field . "_score");
+                } else if ($property->$field) {
                     self::profileConditionBuilder($subQuery, $property, $field, $selects, $minMultiplier, $maxMultiplier);
                     $fieldsConsidered->add($field . "_score");
                 }
@@ -112,50 +125,50 @@ class SearchProfileRepository extends EloquentModelRepository
 
         $aggregateColumns = collect([]);
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` < {$value} AND `{$maxColumn}` > {$value}, 1, 0)"
+            "IF(`{$minColumn}` <= {$value} AND `{$maxColumn}` >= {$value}, 1, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $maxColumn, $minColumn) {
-            $query->where($minColumn, '<', $property->price)
-                ->where($maxColumn, '>', $property->price);
+        $query->orWhere(function ($query) use ($value, $maxColumn, $minColumn) {
+            $query->where($minColumn, '<=', $value)
+                ->where($maxColumn, '>=',  $value);
         });
 
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` IS NULL AND `{$maxColumn}` > {$value}, 1, 0)"
+            "IF(`{$minColumn}` IS NULL AND `{$maxColumn}` >= {$value}, 1, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $maxColumn, $minColumn) {
+        $query->orWhere(function ($query) use ($value, $maxColumn, $minColumn) {
             $query->whereNull($minColumn)
-                ->where($maxColumn, '>', $property->price);
+                ->where($maxColumn, '>=', $value);
         });
 
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` < {$value} AND `{$maxColumn}` IS NULL, 1, 0)"
+            "IF(`{$minColumn}` <= {$value} AND `{$maxColumn}` IS NULL, 1, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $maxColumn, $minColumn) {
-            $query->where($minColumn, '<', $property->price)
+        $query->orWhere(function ($query) use ($value, $maxColumn, $minColumn) {
+            $query->where($minColumn, '<=', $value)
                 ->whereNull($maxColumn);
         });
 
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` * {$minMultiplier} < {$value} AND `{$maxColumn}` * {$maxMultiplier} > {$value}, 0.5, 0)"
+            "IF(`{$minColumn}` * {$minMultiplier} <= {$value} AND `{$maxColumn}` * {$maxMultiplier} >= {$value}, 0.5, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $minColumn, $maxColumn, $minMultiplier, $maxMultiplier) {
-            $query->whereRaw("{$minColumn} * ? < ?", [$minMultiplier, $property->price])
-                ->whereRaw("{$maxColumn} * ? > ?", [$maxMultiplier, $property->price]);
+        $query->orWhere(function ($query) use ($value, $minColumn, $maxColumn, $minMultiplier, $maxMultiplier) {
+            $query->whereRaw("{$minColumn} * ? <= ?", [$minMultiplier, $value])
+                ->whereRaw("{$maxColumn} * ? >= ?", [$maxMultiplier, $value]);
         });
 
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` IS NULL AND `{$maxColumn}` * {$maxMultiplier} > {$value}, 0.5, 0)"
+            "IF(`{$minColumn}` IS NULL AND `{$maxColumn}` * {$maxMultiplier} >= {$value}, 0.5, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $minColumn, $maxColumn, $maxMultiplier) {
+        $query->orWhere(function ($query) use ($value, $minColumn, $maxColumn, $maxMultiplier) {
             $query->whereNull($minColumn)
-                ->whereRaw("{$maxColumn} * ? > ?", [$maxMultiplier, $property->price]);
+                ->whereRaw("{$maxColumn} * ? >= ?", [$maxMultiplier, $value]);
         });
 
         $aggregateColumns->add(DB::raw(
-            "IF(`{$minColumn}` * {$minMultiplier} < {$value} AND `{$maxColumn}` IS NULL, 0.5, 0)"
+            "IF(`{$minColumn}` * {$minMultiplier} <= {$value} AND `{$maxColumn}` IS NULL, 0.5, 0)"
         ));
-        $query->orWhere(function ($query) use ($property, $minColumn, $maxColumn, $minMultiplier) {
-            $query->whereRaw("{$minColumn} * ? < ?", [$minMultiplier, $property->price])
+        $query->orWhere(function ($query) use ($value, $minColumn, $maxColumn, $minMultiplier) {
+            $query->whereRaw("{$minColumn} * ? <= ?", [$minMultiplier, $value])
                 ->whereNull($maxColumn);
         });
 
