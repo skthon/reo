@@ -22,14 +22,21 @@ class MatchProfileController extends Controller
     {
         if (! Str::isUUid($propertyUuid)) {
             return response()->json([
-                "error" => 'Bad input, Please specify property id to filter the search profiles'
+                'error' => 'Bad input, Please specify property id to filter the search profiles'
             ], 422);
         }
 
         $property = PropertyRepository::findByUuid($propertyUuid);
         if (! $property) {
             return response()->json([
-                "error" => 'Invalid input, Please specify valid property id to filter the search profiles'
+                'error' => 'Invalid input, Please specify valid property id to filter the search profiles'
+            ], 422);
+        }
+
+        // Check if the property contains at-least one filter to search on
+        if (PropertyRepository::doesPropertyQualifyForSearch($property)) {
+            return response()->json([
+                'error' => 'Property does not have enough details to qualify for searching profiles.'
             ], 422);
         }
 

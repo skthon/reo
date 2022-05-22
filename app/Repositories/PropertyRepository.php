@@ -27,4 +27,18 @@ class PropertyRepository extends EloquentModelRepository
     {
         return Property::withUuid($propertyUuid)->first();
     }
+
+    /**
+     * Check if property is qualified for searching profiles. This method will check if all the fields are not null
+     *
+     * @param \App\Models\Property $property
+     * @return boolean
+     */
+    public static function doesPropertyQualifyForSearch(Property $property): bool
+    {
+        return collect($property->getAttributes())
+            ->only(Property::getRangeFields())
+            ->filter()
+            ->isEmpty();
+    }
 }
