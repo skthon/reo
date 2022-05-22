@@ -4,6 +4,7 @@
 # Table of Contents
   - [Known Issues](#known-issues)
   - [Requirements & Installation](#requirements-installation)
+  - [Tests](#Tests)
   - [Match API](#match-api)
 ---
 
@@ -39,6 +40,10 @@
     DB_USERNAME=reo
     DB_PASSWORD=reopass
     ```
+  - To create local and local testing database, run the below command
+    ```
+    php artisan database:create
+    ``` 
   - Run Migrations
     ```
     php artisan migrate
@@ -81,6 +86,44 @@
     ]);
     ```
 ---
+
+
+# Tests
+$ php artisan test
+```
+   PASS  Tests\Feature\MatchApiTest
+  ✓ responds with an error if invalid api endpoint is provided
+  ✓ responds with an error if incremental property id is provided
+  ✓ responds with an error if non existing property id is provided
+  ✓ responds with an error when unfilled property is provided
+  ✓ responds with empty results when no search profiles are created
+  ✓ responds with empty results when search profiles are created with exclusive filter
+  ✓ responds with empty results when search profiles min filters is null and max filters is null
+  ✓ responds with results when search profiles are created with inclusive filters
+  ✓ responds with loose results when search profiles are created with slightly exclusive filters
+  ✓ responds with empty results when search profiles min filters is null and max filters is exclusive
+  ✓ responds with results when search profiles min filters is null and max filters is inclusive
+  ✓ responds with loose results when search profiles min filters is null and slightly exclusive max filters
+  ✓ responds with empty results when search profiles min filters is exclusive and max filters is null
+  ✓ responds with results when search profiles min filters is inclusive and max filters is null
+  ✓ responds with loose results when search profiles min filters is slightly exclusive and max filters is null
+  ✓ responds with results sorted by score
+
+   PASS  Tests\Feature\MatchApiPriceFilterTest
+  ✓ responds with empty results when search profiles are created with exclusive price filter
+  ✓ responds with empty results when search profiles min price is null and max price is null
+  ✓ responds with results when search profiles are created with inclusive price filter
+  ✓ responds with loose results when search profiles are created with slightly exclusive price filter
+  ✓ responds with empty results when search profiles min price is null and max price is exclusive
+  ✓ responds with results when search profiles min price is null and max price is inclusive
+  ✓ responds with loose results when search profiles min price is null and slightly exclusive max price
+  ✓ responds with empty results when search profiles min price is exclusive and max price is null
+  ✓ responds with results when search profiles min price is inclusive and max price is null
+  ✓ responds with loose results when search profiles min price is slightly exclusive and max price is null
+
+  Tests:  26 passed
+  Time:   2.02s
+```
 
 # Match API
 

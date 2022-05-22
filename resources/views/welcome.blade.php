@@ -4,6 +4,7 @@
 <ul>
 <li><a href="#known-issues">Known Issues</a></li>
 <li><a href="#requirements-installation">Requirements &amp; Installation</a></li>
+<li><a href="#Tests">Tests</a></li>
 <li><a href="#match-api">Match API</a></li>
 </ul>
 <hr>
@@ -37,6 +38,8 @@ git checkout feature/search-profile-matcher-api
 <span class="hljs-attr">DB_DATABASE</span>=reo
 <span class="hljs-attr">DB_USERNAME</span>=reo
 <span class="hljs-attr">DB_PASSWORD</span>=reopass
+</code></pre></li>
+<li>To create local and local testing database, run the below command<pre><code><span class="hljs-selector-tag">php</span> <span class="hljs-selector-tag">artisan</span> <span class="hljs-selector-tag">database</span><span class="hljs-selector-pseudo">:create</span>
 </code></pre></li>
 <li>Run Migrations<pre><code><span class="hljs-attribute">php artisan migrate</span>
 </code></pre></li>
@@ -80,7 +83,41 @@ $property-&gt;save();
 </li>
 </ul>
 <hr>
-<h1 id="match-api">Match API</h1>
+<h1 id="tests">Tests</h1>
+<p>$ php artisan test</p>
+<pre><code>   PASS  Tests\Feature\MatchApiTest
+  ✓ responds <span class="hljs-keyword">with</span> an <span class="hljs-literal">error</span> <span class="hljs-keyword">if</span> invalid api endpoint <span class="hljs-keyword">is</span> provided
+  ✓ responds <span class="hljs-keyword">with</span> an <span class="hljs-literal">error</span> <span class="hljs-keyword">if</span> incremental <span class="hljs-keyword">property</span> id <span class="hljs-keyword">is</span> provided
+  ✓ responds <span class="hljs-keyword">with</span> an <span class="hljs-literal">error</span> <span class="hljs-keyword">if</span> non existing <span class="hljs-keyword">property</span> id <span class="hljs-keyword">is</span> provided
+  ✓ responds <span class="hljs-keyword">with</span> an <span class="hljs-literal">error</span> <span class="hljs-keyword">when</span> unfilled <span class="hljs-keyword">property</span> <span class="hljs-keyword">is</span> provided
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> no search profiles are created
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> exclusive filter
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> inclusive filters
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> slightly exclusive filters
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> exclusive
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> inclusive
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> slightly exclusive max filters
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> exclusive <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> inclusive <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles min filters <span class="hljs-keyword">is</span> slightly exclusive <span class="hljs-keyword">and</span> max filters <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> results sorted by score
+
+   PASS  Tests\Feature\MatchApiPriceFilterTest
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> exclusive price filter
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> inclusive price filter
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles are created <span class="hljs-keyword">with</span> slightly exclusive price filter
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> exclusive
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> inclusive
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span> <span class="hljs-keyword">and</span> slightly exclusive max price
+  ✓ responds <span class="hljs-keyword">with</span> empty results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> exclusive <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> inclusive <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+  ✓ responds <span class="hljs-keyword">with</span> loose results <span class="hljs-keyword">when</span> search profiles min price <span class="hljs-keyword">is</span> slightly exclusive <span class="hljs-keyword">and</span> max price <span class="hljs-keyword">is</span> <span class="hljs-keyword">null</span>
+
+  Tests:  <span class="hljs-number">26</span> passed
+  <span class="hljs-built_in">Time</span>:   <span class="hljs-number">2.02</span>s
+</code></pre><h1 id="match-api">Match API</h1>
 <ul>
 <li>GET request</li>
 <li>URLS<ul>
